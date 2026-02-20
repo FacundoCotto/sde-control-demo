@@ -88,7 +88,6 @@ function List() {
         );
     };
 
-
     const activityBodyTemplate = (customer: Demo.Customer) => {
         return <ProgressBar value={customer.activity} showValue={false} style={{ height: '.5rem' }} />;
     };
@@ -97,17 +96,7 @@ function List() {
 
     return (
         <div className="card">
-            <DataTable
-                ref={dt}
-                header={header}
-                paginator
-                rows={10}
-                responsiveLayout="scroll"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                rowsPerPageOptions={[10, 25, 50]}
-                filters={filters}
-                loading={loading}
-            >
+            <DataTable ref={dt} header={header} paginator rows={10} responsiveLayout="scroll" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" rowsPerPageOptions={[10, 25, 50]} filters={filters} loading={loading}>
                 <Column field="name" header="Name" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
                 <Column field="country.name" header="Country" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
                 <Column field="representative.name" header="Created By" body={createdByBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>

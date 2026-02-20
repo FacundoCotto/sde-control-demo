@@ -5,6 +5,7 @@ import '../styles/layout/layout.scss';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import 'primereact/resources/primereact.css';
+import { AuthProvider } from '@/context/authcontext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -14,7 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </head>
             <body>
                 <PrimeReactProvider>
-                    <LayoutProvider>{children}</LayoutProvider>
+                    <LayoutProvider>
+                        <AuthProvider>{children}</AuthProvider>
+                    </LayoutProvider>
                 </PrimeReactProvider>
             </body>
         </html>

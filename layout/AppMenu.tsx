@@ -18,7 +18,7 @@ const AppMenu = () => {
                     to: '/users/create'
                 }
             ]
-        },
+        }
     ];
     return <AppSubMenu model={model} />;
 };
