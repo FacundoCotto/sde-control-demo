@@ -5,7 +5,7 @@ import '../styles/layout/layout.scss';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import 'primereact/resources/primereact.css';
-import { AuthProvider } from '@/context/authcontext';
+import { AuthProvider } from '@/firebase/context/authcontext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
