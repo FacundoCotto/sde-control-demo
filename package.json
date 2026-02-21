@@ -10,11 +10,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "chart.js": "^4.3.2",
     "firebase": "^12.9.0",
     "next": "13.5.11",
-    "primeflex": "^4.0.0",
-    "primeicons": "^7.0.0",
-    "primereact": "^10.9.7",
+    "primeflex": "^3.3.0",
+    "primeicons": "^6.0.1",
+    "primereact": "^10.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
