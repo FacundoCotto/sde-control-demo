@@ -1,25 +1,51 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '../context/authcontext';
+import { Toast } from 'primereact/toast';
 
 function useLogin() {
     const { login } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
+    const toast = useRef<Toast>(null);
 
     const handleLogin = useCallback(async (email: string, password: string) => {
-        setError(null);
         setIsSubmitting(true);
         try {
             await login(email, password);
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Login successful',
+                life: 1000
+            });
         } catch (err: any) {
             if (err.message === 'Firebase: Error (auth/invalid-credential).') {
-                setError('Usuario o contraseña incorrectos');
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: "Credenciales inválidas",
+                    life: 1000
+                });
             } else if (err.message === 'Firebase: Error (auth/too-many-requests).') {
-                setError('Demasiados intentos fallidos');
-            } else if (err.message === 'Firebase: Error (auth/user-not-found).') {
-                setError('Usuario no encontrado');
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: "Demasiados intentos fallidos",
+                    life: 1000
+                });
+            } else if (email.trim() === "" || password.trim() === "") {
+                toast.current?.show({
+                    severity: 'warn',
+                    summary: 'Error',
+                    detail: "Ingrese email y contraseña",
+                    life: 1000
+                });
             } else {
-                setError('Error al iniciar sesión');
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: "Error al iniciar sesión",
+                    life: 1000
+                });
             }
             throw err;
         } finally {
@@ -30,8 +56,7 @@ function useLogin() {
     return {
         login: handleLogin,
         isSubmitting,
-        error,
-        resetError: () => setError(null)
+        toast,
     };
 }
 

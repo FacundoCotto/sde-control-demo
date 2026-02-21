@@ -7,17 +7,33 @@ import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import { ProgressBar } from 'primereact/progressbar';
 import React, { useEffect, useRef, useState } from 'react';
-import type { Demo } from '@/types';
 import { Dialog } from 'primereact/dialog';
 import ProfileCreate from '../create/page';
+import { getUsers, User } from '@/firebase/lib/realtimeDb';
 
 function List() {
     const [displayBasic, setDisplayBasic] = useState(false);
+    const [users, setUsers] = useState<User[]>([]);
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
     const [loading, setLoading] = useState(false);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            setLoading(true);
+            try {
+                const usersData = await getUsers();
+                setUsers(usersData);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
 
     const clearFilter = () => {
         initFilters();
@@ -52,8 +68,6 @@ function List() {
         setGlobalFilterValue(value);
     };
 
-    const basicDialogFooter = <Button type="button" label="OK" onClick={() => setDisplayBasic(false)} icon="pi pi-check" outlined />;
-
     const renderHeader = () => {
         return (
             <div className="flex flex-wrap gap-2 align-items-center justify-content-between">
@@ -62,53 +76,34 @@ function List() {
                     <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Global Search" className="w-full" />
                 </span>
                 <Button type="button" icon="pi pi-user-plus" label="Add New" outlined className="w-full sm:w-auto flex-order-0 sm:flex-order-1" onClick={() => setDisplayBasic(true)} />
-                <Dialog header="Add new user" modal style={{ width: '70vw' }} visible={displayBasic} onHide={() => setDisplayBasic(false)} footer={basicDialogFooter}>
-                    <ProfileCreate />
+                <Dialog
+                    modal
+                    header="Create User"
+                    closable={false}
+                    style={{ width: '35vw', height: '55vh' }}
+                    visible={displayBasic}
+                    onHide={() => {
+                        if (!displayBasic) return;
+                        setDisplayBasic(false);
+                    }}
+                >
+                    <ProfileCreate OnClose={() => setDisplayBasic(false)}/>
                 </Dialog>
             </div>
         );
     };
 
-    const nameBodyTemplate = (customer: Demo.Customer) => {
-        return (
-            <>
-                <span className="p-column-title">Name</span>
-                {customer.name}
-            </>
-        );
-    };
 
-    const countryBodyTemplate = (customer: Demo.Customer) => {
-        return (
-            <>
-                <img alt={customer.country.name} src={`/demo/images/flag/flag_placeholder.png`} className={'w-2rem mr-2 flag flag-' + customer.country.code} />
-                <span className="image-text">{customer.country.name}</span>
-            </>
-        );
-    };
-
-    const createdByBodyTemplate = (customer: Demo.Customer) => {
-        return (
-            <div className="inline-flex align-items-center">
-                <img alt={customer.representative.name} src={`/demo/images/avatar/${customer.representative.image}`} className="w-2rem mr-2" />
-                <span>{customer.representative.name}</span>
-            </div>
-        );
-    };
-
-    const activityBodyTemplate = (customer: Demo.Customer) => {
-        return <ProgressBar value={customer.activity} showValue={false} style={{ height: '.5rem' }} />;
-    };
 
     const header = renderHeader();
 
     return (
         <div className="card">
             <DataTable ref={dt} header={header} paginator rows={10} responsiveLayout="scroll" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" rowsPerPageOptions={[10, 25, 50]} filters={filters} loading={loading}>
-                <Column field="name" header="Name" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="country.name" header="Country" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="representative.name" header="Created By" body={createdByBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Activity" body={activityBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
+                <Column field="name" header="Name"></Column>
+                <Column field="usuario" header="Usuario"></Column>
+                <Column field="email" header="Email"></Column>
+                <Column field="panel" header="Activity"></Column>
             </DataTable>
         </div>
     );

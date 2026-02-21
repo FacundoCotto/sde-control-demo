@@ -10,10 +10,14 @@ import {
 } from 'firebase/database';
 export interface UserData {
     nombre: string;
+    user: string;
     email: string;
-    rol: string;
-    activo: boolean;
+    clave: string;
+    tipoUsuario: string;
+    usuarioDePanel: boolean;
+    paginaDeInicio: string;
     creadoEn: string;
+    actualizadoEn: string;
 }
 export interface User extends UserData {
     id: string;
