@@ -8,10 +8,13 @@ import { InputText } from 'primereact/inputtext';
 import { ProgressBar } from 'primereact/progressbar';
 import React, { useEffect, useRef, useState } from 'react';
 import type { Demo } from '@/types';
+import { Dialog } from 'primereact/dialog';
+import ProfileCreate from '../create/page';
 
 function List() {
+    const [displayBasic, setDisplayBasic] = useState(false);
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
@@ -49,6 +52,8 @@ function List() {
         setGlobalFilterValue(value);
     };
 
+    const basicDialogFooter = <Button type="button" label="OK" onClick={() => setDisplayBasic(false)} icon="pi pi-check" outlined />;
+
     const renderHeader = () => {
         return (
             <div className="flex flex-wrap gap-2 align-items-center justify-content-between">
@@ -56,7 +61,10 @@ function List() {
                     <i className="pi pi-search"></i>
                     <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Global Search" className="w-full" />
                 </span>
-                <Button type="button" icon="pi pi-user-plus" label="Add New" outlined className="w-full sm:w-auto flex-order-0 sm:flex-order-1" onClick={() => router.push('/profile/create')} />
+                <Button type="button" icon="pi pi-user-plus" label="Add New" outlined className="w-full sm:w-auto flex-order-0 sm:flex-order-1" onClick={() => setDisplayBasic(true)} />
+                <Dialog header="Add new user" modal style={{ width: '70vw' }} visible={displayBasic} onHide={() => setDisplayBasic(false)} footer={basicDialogFooter}>
+                    <ProfileCreate />
+                </Dialog>
             </div>
         );
     };
