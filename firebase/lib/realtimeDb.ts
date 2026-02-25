@@ -9,15 +9,15 @@ import {
     child
 } from 'firebase/database';
 export interface UserData {
-    nombre: string;
+    name: string;
     user: string;
     email: string;
-    clave: string;
-    tipoUsuario: string;
-    usuarioDePanel: boolean;
-    paginaDeInicio: string;
-    creadoEn: string;
-    actualizadoEn: string;
+    password: string;
+    userType: string;
+    panelUser: boolean;
+    homePage: string;
+    createdAt: string;
+    updatedAt: string;
 }
 export interface User extends UserData {
     id: string;
