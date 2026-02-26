@@ -8,9 +8,11 @@ import Link from 'next/link';
 import { StyleClass } from 'primereact/styleclass';
 import { usePathname, useRouter } from 'next/navigation';
 import { classNames } from 'primereact/utils';
+import { useAuth } from '@/firebase/context/authcontext';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
     const { onMenuToggle, layoutConfig, tabs, closeTab } = useContext(LayoutContext);
+    const { logout, user } = useAuth();
 
     const [searchActive, setSearchActive] = useState<boolean | null>(null);
 
@@ -107,10 +109,9 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
             <div className="topbar-profile">
                 <StyleClass nodeRef={searchRef} selector="@next" enterClassName="hidden" enterActiveClassName="scalein" leaveToClassName="hidden" leaveActiveClassName="fadeout" hideOnOutsideClick>
                     <button ref={searchRef} className="topbar-profile-button p-link" type="button">
-                        <img alt="avatar" src="/layout/images/avatar.png" />
                         <span className="profile-details">
-                            <span className="profile-name">Gene Russell</span>
-                            <span className="profile-job">Developer</span>
+                            <span className="profile-name">{user?.displayName}</span>
+                            <span className="profile-job">{user?.email}</span>
                         </span>
                         <i className="pi pi-angle-down"></i>
                     </button>
@@ -134,7 +135,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                         </a>
                         <a className="p-ripple flex p-2 border-round align-items-center hover:surface-hover transition-colors transition-duration-150 cursor-pointer">
                             <i className="pi pi-power-off mr-3"></i>
-                            <span>Sign Out</span>
+                            <span onClick={logout}>Sign Out</span>
                             <Ripple />
                         </a>
                     </li>

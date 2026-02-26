@@ -11,11 +11,6 @@ const AppMenu = () => {
                     label: 'List',
                     icon: 'pi pi-fw pi-list',
                     to: '/users/list'
-                },
-                {
-                    label: 'Create',
-                    icon: 'pi pi-fw pi-plus',
-                    to: '/users/create'
                 }
             ]
         }

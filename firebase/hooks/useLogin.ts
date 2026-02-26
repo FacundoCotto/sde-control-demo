@@ -1,62 +1,55 @@
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '../context/authcontext';
-import { Toast } from 'primereact/toast';
+import { Toast, ToastMessage } from 'primereact/toast';
+
+type severity = 'success' | 'error' | 'warn' | 'info' | undefined;
+type detail = React.ReactNode | undefined;
+type summary = React.ReactNode | undefined;
+
+const FIREBASE_ERROR_MAP: Record<string, ToastMessage> = {
+    'auth/invalid-credential': { severity: 'error', detail: 'Credenciales inválidas' },
+    'auth/too-many-requests': { severity: 'error', detail: 'Demasiados intentos fallidos' },
+};
 
 function useLogin() {
     const { login } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const toast = useRef<Toast>(null);
+    const showToast = useCallback((severity: severity, detail: detail, summary: summary) => {
+        toast.current?.show({ severity, summary, detail, life: 1000 });
+    }, []);
 
-    const handleLogin = useCallback(async (email: string, password: string) => {
-        setIsSubmitting(true);
-        try {
-            await login(email, password);
-            toast.current?.show({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Login successful',
-                life: 1000
-            });
-        } catch (err: any) {
-            if (err.message === 'Firebase: Error (auth/invalid-credential).') {
-                toast.current?.show({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: "Credenciales inválidas",
-                    life: 1000
-                });
-            } else if (err.message === 'Firebase: Error (auth/too-many-requests).') {
-                toast.current?.show({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: "Demasiados intentos fallidos",
-                    life: 1000
-                });
-            } else if (email.trim() === "" || password.trim() === "") {
-                toast.current?.show({
-                    severity: 'warn',
-                    summary: 'Error',
-                    detail: "Ingrese email y contraseña",
-                    life: 1000
-                });
-            } else {
-                toast.current?.show({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: "Error al iniciar sesión",
-                    life: 1000
-                });
+    const handleLogin = useCallback(
+        async (email: string, password: string) => {
+            setIsSubmitting(true);
+            if (email.trim() === "" || password.trim() === "") {
+                showToast('warn', 'Ingrese email y contraseña', 'Error');
+                setIsSubmitting(false);
+                throw new Error('Ingrese email y contraseña');
             }
-            throw err;
-        } finally {
-            setIsSubmitting(false);
-        }
-    }, [login]);
+            try {
+                await login(email, password);
+                showToast('success', 'Login successful', 'Success');
+            } catch (err: any) {
+                const errorCode = err.code || err.message?.match(/\(([^)]+)\)/)?.[1] || '';
+                const mapped = FIREBASE_ERROR_MAP[errorCode];
+                showToast(
+                    mapped?.severity ?? 'error',
+                    mapped?.detail ?? 'Error al iniciar sesión',
+                    mapped?.summary ?? 'Error'
+                );
+                throw err;
+            } finally {
+                setIsSubmitting(false);
+            }
+        },
+        [login, showToast]
+    );
 
     return {
         login: handleLogin,
         isSubmitting,
-        toast,
+        toast
     };
 }
 
