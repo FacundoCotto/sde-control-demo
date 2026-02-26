@@ -6,16 +6,32 @@ import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dialog } from 'primereact/dialog';
-import ProfileCreate from '@/components/users/create/page';
-import { User, UserData } from '@/firebase/lib/realtimeDb';
+import { getUserById, User, UserData } from '@/firebase/lib/realtimeDb';
 import { Dropdown } from 'primereact/dropdown';
 import { InputSwitch } from 'primereact/inputswitch';
 import { onValue, ref } from 'firebase/database';
 import { db } from '@/firebase/lib/firebase';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import CreateUser from '@/components/users/crud/CreateUser';
+import ReadUser from '@/components/users/crud/ReadUser';
+import EditUser from '@/components/users/crud/EditUser';
 
 function List() {
-    const [displayBasic, setDisplayBasic] = useState(false);
+    const [displayCreate, setDisplayCreate] = useState(false);
+    const [displayRead, setDisplayRead] = useState(false);
+    const [displayEdit, setDisplayEdit] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User>({
+        id: '',
+        name: '',
+        user: '',
+        email: '',
+        password: '',
+        userType: '',
+        panelUser: false,
+        homePage: '',
+        createdAt: '',
+        updatedAt: ''
+    });
     const [users, setUsers] = useState<User[]>([]);
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
     const [loading, setLoading] = useState(true);
@@ -90,19 +106,19 @@ function List() {
                     <i className="pi pi-search"></i>
                     <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Search" className="w-full" />
                 </span>
-                <Button type="button" icon="pi pi-user-plus" label="Add New" outlined className="w-full sm:w-auto flex-order-0 sm:flex-order-1" onClick={() => setDisplayBasic(true)} />
+                <Button type="button" icon="pi pi-user-plus" label="Add New" outlined className="w-full sm:w-auto flex-order-0 sm:flex-order-1" onClick={() => setDisplayCreate(true)} />
                 <Dialog
                     modal
                     header="Create User"
                     closable={false}
                     style={{ width: '35vw', height: '55vh' }}
-                    visible={displayBasic}
+                    visible={displayCreate}
                     onHide={() => {
-                        if (!displayBasic) return;
-                        setDisplayBasic(false);
+                        if (!displayCreate) return;
+                        setDisplayCreate(false);
                     }}
                 >
-                    <ProfileCreate OnClose={() => setDisplayBasic(false)} />
+                    <CreateUser OnClose={() => setDisplayCreate(false)} />
                 </Dialog>
             </div>
         );
@@ -116,15 +132,7 @@ function List() {
     };
 
     const userTypeHeader = () => {
-        return <Dropdown
-        value={selectedUserType}
-        options={userType}
-        onChange={(e) => onUserTypeFilterChange(e.value)}
-        optionLabel="type"
-        optionValue="type"
-        placeholder="Tipo de Usuario"
-        showClear
-        />;
+        return <Dropdown value={selectedUserType} options={userType} onChange={(e) => onUserTypeFilterChange(e.value)} optionLabel="type" optionValue="type" placeholder="Tipo de Usuario" showClear />;
     };
 
     const nameBodyTemplate = (user: User) => {
@@ -170,14 +178,52 @@ function List() {
         );
     };
 
-        const actionsBodyTemplate = (user: User) => {
+    const actionsBodyTemplate = (user: User) => {
         return (
             <>
                 <span className="p-column-title">Acciones</span>
                 <div className="flex gap-2">
-                    <Button icon="pi pi-pencil" rounded  className="mr-2" />
-                    <Button icon="pi pi-eye" rounded  className="mr-2" severity='warning'/>
-                    <Button icon="pi pi-lock" rounded  className="mr-2"  />
+                    <Button icon="pi pi-pencil" rounded className="mr-2" onClick={() => {
+                        setDisplayEdit(true);
+                        setSelectedUser(user);
+                    }} />
+                    <Dialog
+                        modal
+                        header="Edit User"
+                        closable={true}
+                        style={{ width: '35vw', height: '55vh' }}
+                        visible={displayEdit}
+                        onHide={() => {
+                            if (!displayEdit) return;
+                            setDisplayEdit(false);
+                        }}
+                    >
+                        <EditUser OnClose={() => setDisplayEdit(false)} user={selectedUser} />
+                    </Dialog>
+                    <Button
+                        icon="pi pi-eye"
+                        rounded
+                        className="mr-2"
+                        severity="warning"
+                        onClick={() => {
+                            setDisplayRead(true);
+                            setSelectedUser(user);
+                        }}
+                    />
+                    <Dialog
+                        modal
+                        header="Read User"
+                        closable={true}
+                        style={{ width: '35vw', height: '55vh' }}
+                        visible={displayRead}
+                        onHide={() => {
+                            if (!displayRead) return;
+                            setDisplayRead(false);
+                        }}
+                    >
+                        <ReadUser OnClose={() => setDisplayRead(false)} user={selectedUser} />
+                    </Dialog>
+                    <Button icon="pi pi-lock" rounded className="mr-2" />
                     <Button icon="pi pi-trash" rounded severity="danger" />
                 </div>
             </>
@@ -194,24 +240,24 @@ function List() {
                 </div>
             ) : (
                 <DataTable
-                value={users}
-                ref={dt}
-                header={header}
-                paginator
-                rows={10}
-                responsiveLayout="scroll"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                rowsPerPageOptions={[10, 25, 50]}
-                loading={loading}
-                filters={filters}
-            >
-                <Column field="name" sortable header="Nombre" body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                <Column field="usuario" sortable header="Usuario" body={userBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                <Column field="email" sortable header="Email" body={emailBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                <Column field="panelUser" sortable header="Panel" body={panelBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                <Column field="userType" header={userTypeHeader} body={userTypeBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                <Column field="actions" header="Acciones" body={actionsBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }}></Column>
-            </DataTable>
+                    value={users}
+                    ref={dt}
+                    header={header}
+                    paginator
+                    rows={10}
+                    responsiveLayout="scroll"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                    rowsPerPageOptions={[10, 25, 50]}
+                    loading={loading}
+                    filters={filters}
+                >
+                    <Column field="name" sortable header="Nombre" body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                    <Column field="usuario" sortable header="Usuario" body={userBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                    <Column field="email" sortable header="Email" body={emailBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                    <Column field="panelUser" sortable header="Panel" body={panelBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                    <Column field="userType" header={userTypeHeader} body={userTypeBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                    <Column field="actions" header="Acciones" body={actionsBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }}></Column>
+                </DataTable>
             )}
         </div>
     );

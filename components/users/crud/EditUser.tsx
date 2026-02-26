@@ -1,5 +1,5 @@
 'use client';
-import { createUser } from '@/firebase/lib/realtimeDb';
+import { updateUser, User } from '@/firebase/lib/realtimeDb';
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import { InputSwitch } from 'primereact/inputswitch';
@@ -8,18 +8,18 @@ import { Toast } from 'primereact/toast';
 import React, { useRef, useState } from 'react';
 import { UserData } from '@/firebase/lib/realtimeDb';
 
-function ProfileCreate({ OnClose }: { OnClose: () => void }) {
+function CreateUser({ OnClose, user }: { OnClose: () => void, user: User }) {
     const toast = useRef<Toast>(null);
     const [formValues, setFormValues] = useState<UserData>({
-        name: '',
-        user: '',
-        email: '',
-        password: '',
-        userType: '',
-        panelUser: false,
-        homePage: '',
-        createdAt: '',
-        updatedAt: ''
+        name: user.name,
+        user: user.user,
+        email: user.email,
+        password: user.password,
+        userType: user.userType,
+        panelUser: user.panelUser,
+        homePage: user.homePage,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
     });
 
     const userType = [{ type: 'Administrador' }, { type: 'Usuario' }];
@@ -32,16 +32,14 @@ function ProfileCreate({ OnClose }: { OnClose: () => void }) {
         );
     };
 
-    const handleCreateUser = async () => {
+    const handleEditUser = async (user: User) => {
         try {
             const dataToSend = {
                 ...formValues,
-                createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
-            const newId = await createUser(dataToSend);
-            console.log('Usuario creado con ID:', newId);
-            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Usuario creado exitosamente', life: 1000 });
+            await updateUser(user.id, dataToSend);
+            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Usuario editado exitosamente', life: 1000 });
             OnClose();
         } catch (err: any) {
             if (err.message) {
@@ -104,7 +102,7 @@ function ProfileCreate({ OnClose }: { OnClose: () => void }) {
                     </div>
                     <div className="flex justify-content-between col-12 mt-6">
                         <Button label="Salir" icon="pi pi-times" outlined severity="secondary" onClick={OnClose} />
-                        <Button label="Create User" icon="pi pi-check" onClick={handleCreateUser} />
+                        <Button label="Edit User" icon="pi pi-check" onClick={() => handleEditUser(user)} />
                     </div>
                 </div>
             </div>
@@ -112,4 +110,4 @@ function ProfileCreate({ OnClose }: { OnClose: () => void }) {
     );
 }
 
-export default ProfileCreate;
+export default CreateUser;

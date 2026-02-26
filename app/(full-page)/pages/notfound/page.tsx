@@ -2,16 +2,19 @@
 import { useRouter } from 'next/navigation';
 import { Button } from 'primereact/button';
 import React from 'react';
+import { useAuth } from '@/firebase/context/authcontext';
 
 function NotFound() {
+    const { user, loading } = useAuth();
     const router = useRouter();
 
-    const navigateToDashboard = () => {
-        router.push('/');
-    };
-    const navigateToHelp = () => {
-        router.push('/pages/help');
-    };
+    if (loading) return null;
+
+    const destination = user ? '/users/list' : '/auth/login';
+    const label = user ? 'Go to Users' : 'Go to Login';
+    const linkText = user ? 'users' : 'login';
+
+    const navigate = () => router.push(destination);
 
     return (
         <React.Fragment>
@@ -20,40 +23,12 @@ function NotFound() {
                     <h1 className="font-bold text-2xl mt-0 mb-2">NOT FOUND</h1>
                     <p className="text-color-secondary mb-4">
                         Looks like you are lost. You may try these or go back to{' '}
-                        <a onClick={navigateToDashboard} className="font-bold text-primary hover:underline" style={{ cursor: 'pointer' }}>
-                            dashboard
+                        <a onClick={navigate} className="font-bold text-primary hover:underline" style={{ cursor: 'pointer' }}>
+                            {linkText}
                         </a>
                         .
                     </p>
-
-                    <ul className="list-none p-0 m-0">
-                        <li>
-                            <a onClick={navigateToHelp} className="flex align-items-center py-2 px-3 hover:surface-hover transition-colors transition-duration-150" style={{ cursor: 'pointer' }}>
-                                <span className="inline-flex align-items-center justify-content-center flex-shrink-0 border-round bg-yellow-500 text-white w-3rem h-3rem">
-                                    <i className="pi pi-compass text-2xl"></i>
-                                </span>
-                                <span className="ml-3">
-                                    <span className="mb-2 font-bold text-color">Help Center</span>
-                                    <p className="m-0 text-color-secondary">Access knowledge base</p>
-                                </span>
-                                <i className="ml-auto pi pi-chevron-right text-color"></i>
-                            </a>
-                        </li>
-                        <li>
-                            <a onClick={navigateToHelp} className="flex align-items-center py-2 px-3 hover:surface-hover transition-colors transition-duration-150" style={{ cursor: 'pointer' }}>
-                                <span className="inline-flex align-items-center justify-content-center flex-shrink-0 border-round bg-teal-500 text-white w-3rem h-3rem">
-                                    <i className="pi pi-user text-2xl"></i>
-                                </span>
-                                <span className="ml-3">
-                                    <span className="mb-2 font-bold text-color">Customer Services</span>
-                                    <p className="m-0 text-color-secondary">Get instant answers</p>
-                                </span>
-                                <i className="ml-auto pi pi-chevron-right text-color"></i>
-                            </a>
-                        </li>
-                    </ul>
-
-                    <Button onClick={navigateToDashboard} label="Go to Dashboard" className="mt-4"></Button>
+                    <Button onClick={navigate} label={label} className="mt-4"></Button>
                 </div>
             </div>
         </React.Fragment>
