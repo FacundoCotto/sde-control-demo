@@ -15,11 +15,13 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import CreateUser from '@/components/users/crud/CreateUser';
 import ReadUser from '@/components/users/crud/ReadUser';
 import EditUser from '@/components/users/crud/EditUser';
+import DeleteUser from '@/components/users/crud/DeleteUser';
 
 function List() {
     const [displayCreate, setDisplayCreate] = useState(false);
     const [displayRead, setDisplayRead] = useState(false);
     const [displayEdit, setDisplayEdit] = useState(false);
+    const [displayDelete, setDisplayDelete] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User>({
         id: '',
         name: '',
@@ -224,7 +226,23 @@ function List() {
                         <ReadUser OnClose={() => setDisplayRead(false)} user={selectedUser} />
                     </Dialog>
                     <Button icon="pi pi-lock" rounded className="mr-2" />
-                    <Button icon="pi pi-trash" rounded severity="danger" />
+                    <Button icon="pi pi-trash" rounded severity="danger" onClick={() => {
+                        setDisplayDelete(true);
+                        setSelectedUser(user);
+                    }} />
+                    <Dialog
+                        modal
+                        header="Descatalogar un Usuario"
+                        closable={true}
+                        style={{ width: '50vw', height: '25vh' }}
+                        visible={displayDelete}
+                        onHide={() => {
+                            if (!displayDelete) return;
+                            setDisplayDelete(false);
+                        }}
+                    >
+                        <DeleteUser OnClose={() => setDisplayDelete(false)} user={selectedUser} />
+                    </Dialog>
                 </div>
             </>
         );
