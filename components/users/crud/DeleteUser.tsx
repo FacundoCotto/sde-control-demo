@@ -1,5 +1,4 @@
 'use client';
-import { deleteUser } from '@/firebase/lib/realtimeDb';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import React, { useRef } from 'react';
@@ -12,7 +11,11 @@ function DeleteUser({ OnClose, user }: { OnClose: () => void; user: User }) {
 
     const handleDeleteUser = async () => {
         try {
-            await deleteUser(user.id);
+            await fetch('/api/users/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: user.id }),
+            });
             showSuccess(toast, FIREBASE_SUCCESS_MAP['auth/user-deleted']);
             OnClose();
         } catch (err: any) {

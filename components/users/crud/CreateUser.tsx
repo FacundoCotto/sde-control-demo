@@ -41,8 +41,11 @@ function CreateUser({ OnClose }: { OnClose: () => void }) {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
-            const newId = await createUser(dataToSend);
-            console.log('Usuario creado con ID:', newId);
+            await fetch('/api/users/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSend),
+            });
             showSuccess(toast, FIREBASE_SUCCESS_MAP['auth/user-created']);
             OnClose();
         } catch (err: any) {

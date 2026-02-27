@@ -39,9 +39,13 @@ function CreateUser({ OnClose, user }: { OnClose: () => void, user: User }) {
         try {
             const dataToSend = {
                 ...formValues,
-                updatedAt: new Date().toISOString()
+                id: user.id
             };
-            await updateUser(user.id, dataToSend);
+            await fetch('/api/users/edit', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSend),
+            });
             showSuccess(toast, FIREBASE_SUCCESS_MAP['auth/user-updated']);
             OnClose();
         } catch (err: any) {

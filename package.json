@@ -12,6 +12,7 @@
   "dependencies": {
     "chart.js": "^4.3.2",
     "firebase": "^12.9.0",
+    "firebase-admin": "^13.7.0",
     "next": "13.5.11",
     "primeflex": "^3.3.0",
     "primeicons": "^6.0.1",

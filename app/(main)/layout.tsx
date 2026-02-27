@@ -14,5 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default function MainLayout({ children }: MainLayoutProps) {
-    return <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>;
+    return (
+        <ProtectedRoute>
+            <Layout>{children}</Layout>
+        </ProtectedRoute>
+    );
 }
