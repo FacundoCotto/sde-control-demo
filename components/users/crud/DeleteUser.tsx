@@ -1,9 +1,11 @@
 'use client';
-import { createUser, deleteUser } from '@/firebase/lib/realtimeDb';
+import { deleteUser } from '@/firebase/lib/realtimeDb';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import React, { useRef } from 'react';
 import { User } from '@/firebase/lib/realtimeDb';
+import { showError, showSuccess } from '@/services/toastService';
+import { FIREBASE_ERROR_MAP, FIREBASE_SUCCESS_MAP } from '@/constants/global.constants';
 
 function DeleteUser({ OnClose, user }: { OnClose: () => void; user: User }) {
     const toast = useRef<Toast>(null);
@@ -11,12 +13,12 @@ function DeleteUser({ OnClose, user }: { OnClose: () => void; user: User }) {
     const handleDeleteUser = async () => {
         try {
             await deleteUser(user.id);
-            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Usuario eliminado exitosamente', life: 1000 });
+            showSuccess(toast, FIREBASE_SUCCESS_MAP['auth/user-deleted']);
             OnClose();
         } catch (err: any) {
-            if (err.message) {
-                toast.current?.show({ severity: 'error', summary: 'Error', detail: err.message, life: 1000 });
-            }
+            const errorCode = err.code || err.message?.match(/\(([^)]+)\)/)?.[1] || '';
+            const detail = FIREBASE_ERROR_MAP[errorCode];
+            showError(toast, detail ?? 'Error al eliminar usuario');
         }
     };
 

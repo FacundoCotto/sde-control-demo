@@ -7,6 +7,9 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import React, { useRef, useState } from 'react';
 import { UserData } from '@/firebase/lib/realtimeDb';
+import { showError, showSuccess } from '@/services/toastService';
+import { FIREBASE_ERROR_MAP, FIREBASE_SUCCESS_MAP } from '@/constants/global.constants';
+
 
 function CreateUser({ OnClose, user }: { OnClose: () => void, user: User }) {
     const toast = useRef<Toast>(null);
@@ -39,12 +42,12 @@ function CreateUser({ OnClose, user }: { OnClose: () => void, user: User }) {
                 updatedAt: new Date().toISOString()
             };
             await updateUser(user.id, dataToSend);
-            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Usuario editado exitosamente', life: 1000 });
+            showSuccess(toast, FIREBASE_SUCCESS_MAP['auth/user-updated']);
             OnClose();
         } catch (err: any) {
-            if (err.message) {
-                toast.current?.show({ severity: 'error', summary: 'Error', detail: err.message, life: 1000 });
-            }
+            const errorCode = err.code || err.message?.match(/\(([^)]+)\)/)?.[1] || '';
+            const detail = FIREBASE_ERROR_MAP[errorCode];
+            showError(toast, detail ?? 'Error al editar usuario');
         }
     };
 

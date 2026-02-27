@@ -6,22 +6,19 @@ import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dialog } from 'primereact/dialog';
-import { getUserById, User, UserData } from '@/firebase/lib/realtimeDb';
+import { User } from '@/firebase/lib/realtimeDb';
 import { Dropdown } from 'primereact/dropdown';
 import { InputSwitch } from 'primereact/inputswitch';
-import { onValue, ref } from 'firebase/database';
-import { db } from '@/firebase/lib/firebase';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import CreateUser from '@/components/users/crud/CreateUser';
 import ReadUser from '@/components/users/crud/ReadUser';
 import EditUser from '@/components/users/crud/EditUser';
 import DeleteUser from '@/components/users/crud/DeleteUser';
+import useUsers from '@/firebase/hooks/useUsers';
 
 function List() {
     const [displayCreate, setDisplayCreate] = useState(false);
-    const [displayRead, setDisplayRead] = useState(false);
-    const [displayEdit, setDisplayEdit] = useState(false);
-    const [displayDelete, setDisplayDelete] = useState(false);
+    const [activeDialog, setActiveDialog] = useState<'create' | 'read' | 'edit' | 'delete' | null>(null);
     const [selectedUser, setSelectedUser] = useState<User>({
         id: '',
         name: '',
@@ -34,11 +31,10 @@ function List() {
         createdAt: '',
         updatedAt: ''
     });
-    const [users, setUsers] = useState<User[]>([]);
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
-    const [loading, setLoading] = useState(true);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
+    const { users, loading } = useUsers();
 
     const dt = useRef(null);
     const userType = [{ type: 'Administrador' }, { type: 'Usuario' }];
@@ -46,29 +42,6 @@ function List() {
     useEffect(() => {
         initFilters();
     }, []);
-
-    useEffect(() => {
-        const usersRef = ref(db, 'usuarios');
-        const unsubscribe = onValue(usersRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const usersList = Object.entries(data).map(([id, userData]) => ({
-                    id,
-                    ...(userData as UserData)
-                }));
-                setUsers(usersList);
-            } else {
-                setUsers([]);
-            }
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    const clearFilter = () => {
-        initFilters();
-    };
 
     const initFilters = () => {
         setFilters({
@@ -137,31 +110,12 @@ function List() {
         return <Dropdown value={selectedUserType} options={userType} onChange={(e) => onUserTypeFilterChange(e.value)} optionLabel="type" optionValue="type" placeholder="Tipo de Usuario" showClear />;
     };
 
-    const nameBodyTemplate = (user: User) => {
-        return (
-            <>
-                <span className="p-column-title">Nombre</span>
-                {user.name}
-            </>
-        );
-    };
-    const userBodyTemplate = (user: User) => {
-        return (
-            <>
-                <span className="p-column-title">Usuario</span>
-                {user.user}
-            </>
-        );
-    };
-
-    const emailBodyTemplate = (user: User) => {
-        return (
-            <>
-                <span className="p-column-title">Email</span>
-                {user.email}
-            </>
-        );
-    };
+    const textBodyTemplate = (user: User, field: keyof User, title: string) => (
+        <>
+            <span className="p-column-title">{title}</span>
+            {user[field]}
+        </>
+    );
 
     const panelBodyTemplate = (user: User) => {
         return (
@@ -171,13 +125,9 @@ function List() {
         );
     };
 
-    const userTypeBodyTemplate = (user: User) => {
-        return (
-            <>
-                <span className="p-column-title">Tipo Usuario</span>
-                {user.userType}
-            </>
-        );
+    const openDialog = (type: 'edit' | 'read' | 'delete', user: User) => {
+        setSelectedUser(user);
+        setActiveDialog(type); // un solo state en vez de 4 booleans
     };
 
     const actionsBodyTemplate = (user: User) => {
@@ -185,64 +135,33 @@ function List() {
             <>
                 <span className="p-column-title">Acciones</span>
                 <div className="flex gap-2">
-                    <Button icon="pi pi-pencil" rounded className="mr-2" onClick={() => {
-                        setDisplayEdit(true);
-                        setSelectedUser(user);
-                    }} />
-                    <Dialog
-                        modal
-                        header="Edit User"
-                        closable={true}
-                        style={{ width: '35vw', height: '55vh' }}
-                        visible={displayEdit}
-                        onHide={() => {
-                            if (!displayEdit) return;
-                            setDisplayEdit(false);
+                    <Button
+                        icon="pi pi-pencil"
+                        rounded
+                        className="mr-2"
+                        onClick={() => {
+                            openDialog('edit', user);
                         }}
-                    >
-                        <EditUser OnClose={() => setDisplayEdit(false)} user={selectedUser} />
-                    </Dialog>
+                    />
                     <Button
                         icon="pi pi-eye"
                         rounded
                         className="mr-2"
                         severity="warning"
                         onClick={() => {
-                            setDisplayRead(true);
+                            openDialog('read', user);
+                        }}
+                    />
+                    <Button icon="pi pi-lock" rounded className="mr-2" />
+                    <Button
+                        icon="pi pi-trash"
+                        rounded
+                        severity="danger"
+                        onClick={() => {
+                            openDialog('delete', user);
                             setSelectedUser(user);
                         }}
                     />
-                    <Dialog
-                        modal
-                        header="Read User"
-                        closable={true}
-                        style={{ width: '35vw', height: '55vh' }}
-                        visible={displayRead}
-                        onHide={() => {
-                            if (!displayRead) return;
-                            setDisplayRead(false);
-                        }}
-                    >
-                        <ReadUser OnClose={() => setDisplayRead(false)} user={selectedUser} />
-                    </Dialog>
-                    <Button icon="pi pi-lock" rounded className="mr-2" />
-                    <Button icon="pi pi-trash" rounded severity="danger" onClick={() => {
-                        setDisplayDelete(true);
-                        setSelectedUser(user);
-                    }} />
-                    <Dialog
-                        modal
-                        header="Descatalogar un Usuario"
-                        closable={true}
-                        style={{ width: '50vw', height: '25vh' }}
-                        visible={displayDelete}
-                        onHide={() => {
-                            if (!displayDelete) return;
-                            setDisplayDelete(false);
-                        }}
-                    >
-                        <DeleteUser OnClose={() => setDisplayDelete(false)} user={selectedUser} />
-                    </Dialog>
                 </div>
             </>
         );
@@ -257,25 +176,63 @@ function List() {
                     <ProgressSpinner />
                 </div>
             ) : (
-                <DataTable
-                    value={users}
-                    ref={dt}
-                    header={header}
-                    paginator
-                    rows={10}
-                    responsiveLayout="scroll"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                    rowsPerPageOptions={[10, 25, 50]}
-                    loading={loading}
-                    filters={filters}
-                >
-                    <Column field="name" sortable header="Nombre" body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                    <Column field="usuario" sortable header="Usuario" body={userBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                    <Column field="email" sortable header="Email" body={emailBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                    <Column field="panelUser" sortable header="Panel" body={panelBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                    <Column field="userType" header={userTypeHeader} body={userTypeBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
-                    <Column field="actions" header="Acciones" body={actionsBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }}></Column>
-                </DataTable>
+                <>
+                    <DataTable
+                        value={users}
+                        ref={dt}
+                        header={header}
+                        paginator
+                        rows={10}
+                        responsiveLayout="scroll"
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                        rowsPerPageOptions={[10, 25, 50]}
+                        loading={loading}
+                        filters={filters}
+                    >
+                        <Column field="name" sortable header="Nombre" body={(user) => textBodyTemplate(user, 'name', 'Nombre')} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                        <Column field="usuario" sortable header="Usuario" body={(user) => textBodyTemplate(user, 'user', 'Usuario')} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                        <Column field="email" sortable header="Email" body={(user) => textBodyTemplate(user, 'email', 'Email')} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                        <Column field="panelUser" sortable header="Panel" body={panelBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                        <Column field="userType" header={userTypeHeader} body={(user) => textBodyTemplate(user, 'userType', 'Tipo Usuario')} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
+                        <Column field="actions" header="Acciones" body={actionsBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }}></Column>
+                    </DataTable>
+                    <Dialog
+                        modal
+                        header="Edit User"
+                        closable={true}
+                        style={{ width: '35vw', height: '55vh' }}
+                        visible={activeDialog === 'edit'}
+                        onHide={() => {
+                            setActiveDialog(null);
+                        }}
+                    >
+                        <EditUser OnClose={() => setActiveDialog(null)} user={selectedUser} />
+                    </Dialog>
+                    <Dialog
+                        modal
+                        header="Read User"
+                        closable={true}
+                        style={{ width: '35vw', height: '55vh' }}
+                        visible={activeDialog === 'read'}
+                        onHide={() => {
+                            setActiveDialog(null);
+                        }}
+                    >
+                        <ReadUser OnClose={() => setActiveDialog(null)} user={selectedUser} />
+                    </Dialog>
+                    <Dialog
+                        modal
+                        header="Delete User"
+                        closable={true}
+                        style={{ width: '50vw', height: '25vh' }}
+                        visible={activeDialog === 'delete'}
+                        onHide={() => {
+                            setActiveDialog(null);
+                        }}
+                    >
+                        <DeleteUser OnClose={() => setActiveDialog(null)} user={selectedUser} />
+                    </Dialog>
+                </>
             )}
         </div>
     );

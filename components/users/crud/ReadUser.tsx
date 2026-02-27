@@ -1,12 +1,9 @@
 'use client';
-import { getUserById } from '@/firebase/lib/realtimeDb';
 import { User } from '@/firebase/lib/realtimeDb';
 import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
 import { InputSwitch } from 'primereact/inputswitch';
 import { InputText } from 'primereact/inputtext';
-import { Toast } from 'primereact/toast';
-import React, { useState } from 'react';
+import React from 'react';
 
 
 function ReadUser({ OnClose, user }: { OnClose: () => void, user: User }) {
