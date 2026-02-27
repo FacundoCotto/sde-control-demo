@@ -1,5 +1,9 @@
 {
   "hosting": {
+    "source": ".",
+    "frameworksBackend": {
+      "region": "us-central1"
+    },
     "public": ".next",
     "ignore": [
       "firebase.json",
